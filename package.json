@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@f1api/sdk": "^1.1.0",
+    "express": "^5.1.0"
+  }
+}

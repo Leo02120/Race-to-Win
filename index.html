@@ -1,16 +1,390 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race to Win</title>
+    <link rel="icon" href="logo rtw.png" type="image/png">
+
+    <!-- Icônes pour les applications web -->
+    <link rel="apple-touch-icon" href="logo rtw.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Métadonnées pour les applications web -->
+    <meta name="application-name" content="Race to Win">
+    <meta name="description" content="Une application pour suivre les actualités et les discussions sur la Formule 1.">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Ajoutez le script Supabase ici -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
 
+    <!-- Page d'authentification -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">RACE TO WIN</div>
+                <div class="auth-subtitle">Partagez votre passion avec le monde entier</div>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Connexion</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Inscription</div>
+            </div>
+
+            <!-- Formulaire de connexion -->
+            <form class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="auth-button">Se connecter</button>
+            </form>
+
+            <!-- Formulaire d'inscription -->
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">Prénom</label>
+                    <input type="text" class="form-input" name="firstName" placeholder="Votre prénom" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" name="email" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Surnom</label>
+                    <input type="text" class="form-input" name="nickname" placeholder="Votre surnom" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ton écurie préférée</label>
+                    <div class="team-selector">
+                        <div class="team-option" data-team="ferrari">
+                            <img src="https://static.vecteezy.com/system/resources/previews/022/100/924/large_2x/ferrari-logo-transparent-free-png.png" alt="Ferrari">
+                        </div>
+                        <div class="team-option" data-team="mercedes">
+                            <img src="https://www.freepnglogos.com/uploads/mercedes-logo-png/mercedes-logo-mercedes-benz-logo-png-transparent-svg-vector-bie-13.png" alt="Mercedes">
+                        </div>
+                        <div class="team-option" data-team="redbull">
+                            <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/3/36/Red_Bull_Racing_2022.png/250px-Red_Bull_Racing_2022.png" alt="Red Bull">
+                        </div>
+                        <div class="team-option" data-team="mclaren">
+                            <img src="https://cdn3.emoji.gg/emojis/9807_McLaren_Logo.png" alt="McLaren">
+                        </div>
+                        <div class="team-option" data-team="astonmartin">
+                            <img src="https://companieslogo.com/img/orig/AML.L_BIG-8f60d295.png?t=1720244490" alt="Aston Martin">
+                        </div>
+                        <div class="team-option" data-team="alpine">
+                            <img src="https://brandlogo.org/wp-content/uploads/2024/04/Alpine-Cars-Logo-300x300.png.webp" alt="Alpine">
+                        </div>
+                        <div class="team-option" data-team="williams">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo_Williams_F1.png" alt="Williams">
+                        </div>
+                        <div class="team-option" data-team="haas">
+                            <img src="https://logodownload.org/wp-content/uploads/2022/03/haas-f1-team-logo-0.png" alt="Haas">
+                        </div>
+                        <div class="team-option" data-team="stake">
+                            <img src="https://bettingapps-com.imgix.net/assets/local/stake-logo-white.png?auto=compress%2Cformat&fit=clip&q=75&w=380&s=165f66c291ad3df8714146f3e039c4c6" alt="Stake F1">
+                        </div>
+                        <div class="team-option" data-team="visacashapp">
+                            <img src="https://cdn.prod.website-files.com/61b372525d9e220633140352/65df7c39bce657df7423a0af_Visa_Cash_App_RB_team_logo.webp" alt="Visa Cash App">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="auth-button">S'inscrire</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOUVELLE PAGE PROFIL MODERNE -->
+    <div class="profile-page-overlay" id="profilePageOverlay">
+        <div class="profile-page-container">
+            <!-- Header avec titre et bouton fermer -->
+            <div class="profile-page-header">
+                <h1 class="profile-page-title">Mon Profil</h1>
+                <button class="profile-close-btn" onclick="closeProfilePage()">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="profile-page-content">
+                <!-- Section principale avec avatar et infos -->
+                <div class="profile-main-section">
+                    <div class="profile-main-avatar" id="profileMainAvatar">U</div>
+                    <h2 class="profile-main-name" id="profileMainName">Utilisateur</h2>
+                    <div class="profile-main-team" id="profileMainTeam">
+                        <span>🏎️</span>
+                        <span>Aucune équipe</span>
+                    </div>
+                    <div class="profile-main-email" id="profileMainEmail">email@example.com</div>
+                    <div class="profile-join-date">Membre depuis</div>
+                </div>
+
+                <!-- Section actions et préférences -->
+                <div class="profile-details-section">
+                    <!-- Actions -->
+                    <div class="profile-actions-card">
+                        <h3 class="profile-actions-title">Actions</h3>
+                        <div class="profile-actions-grid">
+                            <button class="profile-action-btn" onclick="editProfile()">
+                                <span class="profile-action-icon">✏️</span>
+                                <span class="profile-action-text">Modifier le profil</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn" onclick="changePassword()">
+                                <span class="profile-action-icon">🔒</span>
+                                <span class="profile-action-text">Changer mot de passe</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn" onclick="upgradeToPremium()">
+                                <span class="profile-action-icon">⭐</span>
+                                <span class="profile-action-text">Passer Premium</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn profile-logout-btn" onclick="logout()">
+                                <span class="profile-action-icon">🚪</span>
+                                <span class="profile-action-text">Se déconnecter</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Préférences -->
+                    <div class="profile-preferences-card">
+                        <h3 class="profile-preferences-title">Préférences</h3>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Notifications</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Sons</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Mode sombre</span>
+                            <div class="profile-preference-toggle" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Animations</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application principale -->
+    <div class="container" id="mainApp">
+        <!-- Section profil -->
+        <div class="profile-section">
+            <button class="profile-button" id="profileButton">A</button>
+            <!-- ANCIEN DROPDOWN GARDÉ POUR COMPATIBILITÉ -->
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="profile-info">
+                    <div class="profile-avatar" id="profileAvatar">A</div>
+                    <div class="profile-name" id="profileName">Utilisateur</div>
+                    <div class="profile-team" id="profileTeam">Aucune équipe</div>
+                </div>
+                <ul class="profile-menu">
+                    <li><button onclick="editProfile()">✏️ Modifier le profil</button></li>
+                    <li><button onclick="showNotificationSettings()">🔔 Notifications</button></li>
+                    <li><button onclick="showSettings()">⚙️ Paramètres</button></li>
+                    <li><button onclick="upgradeToPremium()" id="premiumBtn">⭐ Passer Premium</button></li>
+                    <li><button class="logout-btn" onclick="logout()">🚪 Déconnexion</button></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="css-logo">RACE TO WIN</div>
+            </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="menu">
+            <div class="menu-item active" onclick="showTab('news')">Actualités</div>
+            <div class="menu-item" onclick="showTab('discussion-selection')">Salons</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- News Tab -->
+            <div class="tab-content active" id="news">
+                <div class="swiper-container">
+                    <div class="swiper-wrapper" id="rss-feed">
+                        <!-- Les articles seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Selection Tab -->
+            <div class="tab-content" id="discussion-selection">
+                <div class="discussion-selection-container">
+                    <div class="discussion-options">
+                        <!-- Section Discussion Générale -->
+                        <div class="discussion-section">
+                            <div class="section-discussions">
+                                <!-- Chat Global -->
+                                <div class="discussion-card" data-chat="global">
+                                    <div class="card-header">
+                                        <img src="https://1000marcas.net/wp-content/uploads/2020/01/logo-F1.png" alt="F1 Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-title"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Salons d'équipes -->
+                                <div class="discussion-card locked" data-chat="ferrari" data-team="ferrari">
+                                    <div class="card-header">
+                                        <img src="https://static.vecteezy.com/system/resources/previews/022/100/924/large_2x/ferrari-logo-transparent-free-png.png" alt="Ferrari Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="ferrari-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="mercedes" data-team="mercedes">
+                                    <div class="card-header">
+                                        <img src="https://www.freepnglogos.com/uploads/mercedes-logo-png/mercedes-logo-mercedes-benz-logo-png-transparent-svg-vector-bie-13.png" alt="Mercedes Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="mercedes-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="redbull" data-team="redbull">
+                                    <div class="card-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/3/36/Red_Bull_Racing_2022.png/250px-Red_Bull_Racing_2022.png" alt="Red Bull Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="redbull-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="mclaren" data-team="mclaren">
+                                    <div class="card-header">
+                                        <img src="https://cdn3.emoji.gg/emojis/9807_McLaren_Logo.png" alt="McLaren Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="mclaren-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="astonmartin" data-team="astonmartin">
+                                    <div class="card-header">
+                                        <img src="https://www.pngmart.com/files/22/Aston-Martin-Logo-PNG-Photos.png" alt="Aston Martin Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="astonmartin-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="alpine" data-team="alpine">
+                                    <div class="card-header">
+                                        <img src="https://brandlogo.org/wp-content/uploads/2024/04/Alpine-Cars-Logo-300x300.png.webp" alt="Alpine Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="alpine-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="williams" data-team="williams">
+                                    <div class="card-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo_Williams_F1.png" alt="Williams Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="williams-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="haas" data-team="haas">
+                                    <div class="card-header">
+                                        <img src="https://logodownload.org/wp-content/uploads/2022/03/haas-f1-team-logo-0.png" alt="Haas Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="haas-premium"></div>
+                                    </div>
+                                </div>
+
+                                <!-- STAKE F1 AJOUTÉ -->
+                                <div class="discussion-card locked" data-chat="stake" data-team="stake">
+                                    <div class="card-header">
+                                        <img src="https://bettingapps-com.imgix.net/assets/local/stake-logo-white.png?auto=compress%2Cformat&fit=clip&q=75&w=380&s=165f66c291ad3df8714146f3e039c4c6" alt="Stake F1 Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="stake-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="visacashapp" data-team="visacashapp">
+                                    <div class="card-header">
+                                        <img src="https://cdn.prod.website-files.com/61b372525d9e220633140352/65df7c39bce657df7423a0af_Visa_Cash_App_RB_team_logo.webp" alt="Visa Cash App Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="visacashapp-premium"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Tab -->
+            <div class="tab-content" id="discussion">
+                <div class="discussion-container">
+                    <div class="discussion-header" id="discussionHeader">
+                        💬 Salon Communauté F1
+                    </div>
+                    <div class="discussion-messages" id="discussionMessages">
+                        <!-- Messages will be added dynamically -->
+                        <div class="message other">
+                            <div class="message-author">Utilisateur1</div>
+                            <div class="message-text">Bonjour à tous !</div>
+                        </div>
+                        <div class="message user">
+                            <div class="message-author">Vous</div>
+                            <div class="message-text">Salut ! Comment ça va ?</div>
+                        </div>
+                    </div>
+                    <div class="discussion-input">
+                        <input type="text" placeholder="Tapez votre message..." id="messageInput">
+                        <button onclick="sendMessage()">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Reader -->
+    <div class="article-reader" id="articleReader" style="display: none;">
+        <div class="article-header">
+            <button onclick="closeArticle()">❌</button>
+            <h2 id="articleTitle"></h2>
+        </div>
+        <div class="article-content" id="articleContent"></div>
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+</body>
 </html>
