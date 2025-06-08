@@ -1,16 +1,1229 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <title>Race to Win</title>
+    <link rel="icon" href="logo rtw.png" type="image/png">
+
+    <!-- Icônes pour les applications web -->
+    <link rel="apple-touch-icon" href="logo rtw.png">          
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Métadonnées pour les applications web -->
+    <meta name="application-name" content="Race to Win">
+    <meta name="description" content="Une application pour suivre les actualités et les discussions sur la Formule 1.">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Ajoutez le script Supabase ici -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://unpkg.com/@f1api/sdk@latest/dist/f1api.umd.js"></script>
+
+    <style>
+        /* === CORRECTION HEADER NON-FIXE === */
+        .top-header-bar {
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            height: 70px;
+            background: rgba(16, 5, 33, 0.6);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border: none;
+            outline: none;
+        }
+
+        .content {
+            margin-top: 0px !important;
+            padding-top: 20px;
+        }
+
+        .profile-section {
+            position: static !important;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        #nextEventCard {
+            position: static !important;
+            margin: 0;
+        }
+
+        /* === STYLES PADDOCK - HARMONISÉS AVEC LE DESIGN EXISTANT === */
+
+        /* Container principal paddock */
+        .paddock-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        /* En-tête paddock avec le style existant */
+        .paddock-header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .paddock-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .paddock-subtitle {
+            color: var(--dark-gray);
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+
+        /* Menu secondaire avec style harmonisé */
+        .paddock-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            background: rgba(17, 17, 17, 0.6);
+            border-radius: 16px;
+            padding: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(153, 69, 255, 0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .paddock-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--dark-gray);
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paddock-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .paddock-tab:hover::before {
+            opacity: 0.1;
+        }
+
+        .paddock-tab.active {
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 0 20px rgba(153, 69, 255, 0.3);
+        }
+
+        .paddock-tab.active::before {
+            opacity: 0;
+        }
+
+        /* Contenu des onglets */
+        .paddock-content {
+            min-height: 600px;
+        }
+
+        .paddock-tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+
+        .paddock-tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* En-têtes de section */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Contrôles de filtre */
+        .filter-controls {
+            display: flex;
+            gap: 8px;
+            background: rgba(17, 17, 17, 0.4);
+            border-radius: 12px;
+            padding: 6px;
+            border: 1px solid rgba(153, 69, 255, 0.1);
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--dark-gray);
+            font-weight: 500;
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-color);
+            background: rgba(153, 69, 255, 0.1);
+        }
+
+        .filter-btn.active {
+            color: var(--text-color);
+            background: var(--primary-color);
+            box-shadow: 0 0 15px rgba(153, 69, 255, 0.3);
+        }
+
+        /* Grilles avec containers subtils */
+        .drivers-grid,
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Cartes pilotes/équipes avec design harmonisé */
+        .driver-card,
+        .team-card {
+            background: rgba(17, 17, 17, 0.6);
+            border: 1px solid rgba(153, 69, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .driver-card::before,
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(153, 69, 255, 0.05) 0%,
+                rgba(20, 241, 149, 0.03) 50%,
+                rgba(0, 212, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 16px;
+        }
+
+        .driver-card:hover::before,
+        .team-card:hover::before {
+            opacity: 1;
+        }
+
+        .driver-card:hover,
+        .team-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(153, 69, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(153, 69, 255, 0.2);
+        }
+
+        /* Contenu des cartes */
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .driver-avatar,
+        .team-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .driver-avatar img,
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .card-info {
+            flex: 1;
+        }
+
+        .card-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        .card-details {
+            color: var(--dark-gray);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--dark-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Cartes statistiques */
+        .stat-card {
+            background: rgba(17, 17, 17, 0.6);
+            border: 1px solid rgba(153, 69, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(153, 69, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(153, 69, 255, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .stat-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(153, 69, 255, 0.3);
+        }
+
+        .stat-description {
+            color: var(--dark-gray);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Section comparaisons */
+        .comparison-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .driver-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .driver-selector label {
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .driver-selector select {
+            padding: 12px 16px;
+            background: rgba(17, 17, 17, 0.6);
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            border-radius: 12px;
+            color: var(--text-color);
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .driver-selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(153, 69, 255, 0.3);
+        }
+
+        .vs-divider {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            padding: 0 20px;
+            text-shadow: 0 0 20px rgba(153, 69, 255, 0.3);
+        }
+
+        .comparison-results {
+            background: rgba(17, 17, 17, 0.6);
+            border: 1px solid rgba(153, 69, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-placeholder {
+            color: var(--dark-gray);
+            font-size: 16px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Loading states */
+        .loading-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--dark-gray);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(153, 69, 255, 0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-placeholder p {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .top-header-bar {
+                height: 60px;
+                padding: 0 15px;
+                margin-bottom: 10px;
+            }
+
+            .content {
+                padding-top: 15px;
+            }
+
+            .paddock-container {
+                padding: 15px;
+            }
+
+            .paddock-title {
+                font-size: 2.5rem;
+            }
+
+            .paddock-tabs {
+                flex-wrap: wrap;
+                max-width: 100%;
+            }
+
+            .paddock-tab {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .drivers-grid,
+            .teams-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .comparison-controls {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .vs-divider {
+                transform: rotate(90deg);
+                padding: 16px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-header-bar {
+                height: 55px;
+                padding: 0 10px;
+                margin-bottom: 8px;
+            }
+
+            .content {
+                padding-top: 10px;
+            }
+
+            .paddock-title {
+                font-size: 2rem;
+                letter-spacing: 2px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .driver-card,
+            .team-card,
+            .stat-card {
+                padding: 20px;
+            }
+
+            .card-header {
+                gap: 12px;
+            }
+
+            .driver-avatar,
+            .team-logo {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
 
+    <!-- Page d'authentification -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">RACE TO WIN</div>
+                <div class="auth-subtitle">Partagez votre passion avec le monde entier</div>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Connexion</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Inscription</div>
+            </div>
+
+            <!-- Formulaire de connexion -->
+            <form class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="auth-button">Se connecter</button>
+            </form>
+
+            <!-- Formulaire d'inscription -->
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">Prénom</label>
+                    <input type="text" class="form-input" name="firstName" placeholder="Votre prénom" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" name="email" placeholder="votre@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Surnom</label>
+                    <input type="text" class="form-input" name="nickname" placeholder="Votre surnom" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ton écurie préférée</label>
+                    <div class="team-selector">
+                        <div class="team-option" data-team="ferrari">
+                            <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Scuderia_Ferrari_Logo.svg/400px-Scuderia_Ferrari_Logo.svg.png?20250316140006" alt="Ferrari">
+                        </div>
+                        <div class="team-option" data-team="mercedes">
+                            <img src="https://www.freepnglogos.com/uploads/mercedes-logo-png/mercedes-logo-mercedes-benz-logo-png-transparent-svg-vector-bie-13.png" alt="Mercedes">
+                        </div>
+                        <div class="team-option" data-team="redbull">
+                            <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/3/36/Red_Bull_Racing_2022.png/250px-Red_Bull_Racing_2022.png" alt="Red Bull">
+                        </div>
+                        <div class="team-option" data-team="mclaren">
+                            <img src="https://cdn3.emoji.gg/emojis/9807_McLaren_Logo.png" alt="McLaren">
+                        </div>
+                        <div class="team-option" data-team="astonmartin">
+                            <img src="https://imgs.search.brave.com/U6X3t-kkg7bm4KVYbSctCLABNOQd7iLBke9v19-pPms/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wbmdp/bWcuY29tL3VwbG9h/ZHMvYXN0b25fbWFy/dGluL2FzdG9uX21h/cnRpbl9QTkczNS5w/bmc" alt="Aston Martin">
+                        </div>
+                        <div class="team-option" data-team="alpine">
+                            <img src="https://brandlogo.org/wp-content/uploads/2024/04/Alpine-Cars-Logo-300x300.png.webp" alt="Alpine">
+                        </div>
+                        <div class="team-option" data-team="williams">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo_Williams_F1.png" alt="Williams">
+                        </div>
+                        <div class="team-option" data-team="haas">
+                            <img src="https://logodownload.org/wp-content/uploads/2022/03/haas-f1-team-logo-0.png" alt="Haas">
+                        </div>
+                        <div class="team-option" data-team="stake">
+                            <img src="https://bettingapps-com.imgix.net/assets/local/stake-logo-white.png?auto=compress%2Cformat&fit=clip&q=75&w=380&s=165f66c291ad3df8714146f3e039c4c6" alt="Stake F1">
+                        </div>
+                        <div class="team-option" data-team="visacashapp">
+                            <img src="https://cdn.prod.website-files.com/61b372525d9e220633140352/65df7c39bce657df7423a0af_Visa_Cash_App_RB_team_logo.webp" alt="Visa Cash App">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="auth-button">S'inscrire</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOUVELLE PAGE PROFIL MODERNE -->
+    <div class="profile-page-overlay" id="profilePageOverlay">
+        <div class="profile-page-container">
+            <!-- Header avec titre et bouton fermer -->
+            <div class="profile-page-header">
+                <h1 class="profile-page-title">Mon Profil</h1>
+                <button class="profile-close-btn" onclick="closeProfilePage()">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="profile-page-content">
+                <!-- Section principale avec avatar et infos -->
+                <div class="profile-main-section">
+                    <div class="profile-main-avatar" id="profileMainAvatar">U</div>
+                    <h2 class="profile-main-name" id="profileMainName">Utilisateur</h2>
+                    <div class="profile-main-team" id="profileMainTeam">
+                        <span>🏎️</span>
+                        <span>Aucune équipe</span>
+                    </div>
+                    <div class="profile-main-email" id="profileMainEmail">email@example.com</div>
+                    <div class="profile-join-date">Membre depuis</div>
+                </div>
+
+                <!-- Section actions et préférences -->
+                <div class="profile-details-section">
+                    <!-- Actions -->
+                    <div class="profile-actions-card">
+                        <h3 class="profile-actions-title">Actions</h3>
+                        <div class="profile-actions-grid">
+                            <button class="profile-action-btn" onclick="editProfile()">
+                                <span class="profile-action-icon"></span>
+                                <span class="profile-action-text">Modifier le profil</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn" onclick="changePassword()">
+                                <span class="profile-action-icon"></span>
+                                <span class="profile-action-text">Changer mot de passe</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn" onclick="upgradeToPremium()">
+                                <span class="profile-action-icon"></span>
+                                <span class="profile-action-text">Passer Premium</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                            <button class="profile-action-btn profile-logout-btn" onclick="logout()">
+                                <span class="profile-action-icon"></span>
+                                <span class="profile-action-text">Se déconnecter</span>
+                                <span class="profile-action-arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Préférences -->
+                    <div class="profile-preferences-card">
+                        <h3 class="profile-preferences-title">Préférences</h3>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Notifications</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Sons</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Mode sombre</span>
+                            <div class="profile-preference-toggle" onclick="togglePreference(this)"></div>
+                        </div>
+                        <div class="profile-preference-item">
+                            <span class="profile-preference-label">Animations</span>
+                            <div class="profile-preference-toggle active" onclick="togglePreference(this)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application principale -->
+    <div class="container" id="mainApp">
+        <!-- HEADER MAINTENANT À L'INTÉRIEUR DU CONTAINER -->
+        <div class="top-header-bar">
+            <!-- Profile Button à gauche -->
+            <div class="profile-section">
+                <button class="profile-button" id="profileButton">A</button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="profile-info">
+                        <div class="profile-avatar" id="profileAvatar">A</div>
+                        <div class="profile-name" id="profileName">Utilisateur</div>
+                        <div class="profile-team" id="profileTeam">Équipe non définie</div>
+                    </div>
+                    <ul class="profile-menu">
+                        <li><button onclick="showProfilePage()">📱 Mon Profil</button></li>
+                        <li><button onclick="showSettings()">⚙️ Paramètres</button></li>
+                        <li><button onclick="showHelp()">❓ Aide</button></li>
+                        <li><button class="logout-btn" onclick="logout()">🚪 Déconnexion</button></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Practice Widget à droite -->
+            <div class="dashboard-card" id="nextEventCard">
+                <div class="card-content">
+                    <div class="practice-widget-content">
+                        <div class="header">Prochain GP</div>
+                        <div class="date-text">Dim 15/12</div>
+                        <div class="time">14:30</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+
+            <!-- News Tab -->
+            <div class="tab-content active" id="news">
+                <!-- Articles RSS -->
+                <div class="swiper-container">
+                    <div class="swiper-wrapper" id="rss-feed">
+                        <!-- Les articles seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- WIDGETS F1 RESTANTS -->
+                <div class="f1-dashboard">
+                    <!-- Widget Progression Saison -->
+                    <div class="dashboard-card" id="seasonProgressCard">
+                        <div class="card-content">
+                            <div class="progress-widget-content">
+                                <div class="progress-header">
+                                    <div class="percentage">62%</div>
+                                    <div class="counter-section">
+                                        <div class="fraction">15<span class="denominator">/24</span></div>
+                                        <div class="label">Courses</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment active"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Widget Kilométrage -->
+                    <div class="dashboard-card" id="kilometersCard">
+                        <div class="card-content">
+                            <div class="kilometers-display">
+                                <span class="km-current">2722</span>
+                                <span class="km-separator">/</span>
+                                <span class="km-total">7092</span>
+                                <span class="km-unit">km</span>
+                            </div>
+                            <div class="kilometers-bar">
+                                <div class="kilometers-fill" style="width: 38%;"></div>
+                            </div>
+                        </div>
+                    </div>
+            <!-- 🆕 NOUVEAU : Widget Prochain Circuit -->
+                    <div class="dashboard-card" id="nextCircuitCard">
+                        <div class="card-header">
+                            <div class="card-title">Prochain Circuit</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="circuit-widget-content" id="circuitContent">
+                                <div class="circuit-loading">
+                                    <div class="circuit-loading-spinner"></div>
+                                    Chargement...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- PADDOCK TAB -->
+            <div class="tab-content" id="paddock">
+                <div class="paddock-container">
+
+                    <div class="paddock-tabs">
+                        <button class="paddock-tab active" data-tab="drivers">Pilotes</button>
+                        <button class="paddock-tab" data-tab="teams">Écuries</button>
+                    </div>
+
+                    <!-- Contenu des onglets -->
+                    <div class="paddock-content">
+
+                        <!-- Section Pilotes -->
+                        <div id="drivers-tab" class="paddock-tab-content active">
+                            <div class="drivers-grid" id="driversGrid">
+                                <!-- Les pilotes seront chargés dynamiquement -->
+                                <div class="loading-placeholder">
+                                    <div class="loading-spinner"></div>
+                                    <p>Chargement des pilotes...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Équipes -->
+                        <div id="teams-tab" class="paddock-tab-content">
+                            <div class="teams-grid" id="teamsGrid">
+                                <div class="loading-placeholder">
+                                    <div class="loading-spinner"></div>
+                                    <p>Chargement des équipes...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Statistiques -->
+                        <div id="stats-tab" class="paddock-tab-content">
+                            <div class="section-header">
+                                <h2>Statistiques</h2>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon">🏆</div>
+                                    <div class="stat-content">
+                                        <h3>Championnats</h3>
+                                        <p class="stat-value" id="championshipsCount">-</p>
+                                        <p class="stat-description">Titres mondiaux</p>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">🏁</div>
+                                    <div class="stat-content">
+                                        <h3>Victoires</h3>
+                                        <p class="stat-value" id="victoriesCount">-</p>
+                                        <p class="stat-description">Courses gagnées</p>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">⚡</div>
+                                    <div class="stat-content">
+                                        <h3>Pole Positions</h3>
+                                        <p class="stat-value" id="polesCount">-</p>
+                                        <p class="stat-description">Départs en première ligne</p>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">🎯</div>
+                                    <div class="stat-content">
+                                        <h3>Podiums</h3>
+                                        <p class="stat-value" id="podiumsCount">-</p>
+                                        <p class="stat-description">Top 3 finitions</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Comparaisons -->
+                        <div id="compare-tab" class="paddock-tab-content">
+                            <div class="section-header">
+                                <h2>Comparaisons</h2>
+                            </div>
+
+                            <div class="comparison-controls">
+                                <div class="driver-selector">
+                                    <label>Pilote 1</label>
+                                    <select id="driver1Select">
+                                        <option value="">Sélectionner un pilote</option>
+                                    </select>
+                                </div>
+
+                                <div class="vs-divider">VS</div>
+
+                                <div class="driver-selector">
+                                    <label>Pilote 2</label>
+                                    <select id="driver2Select">
+                                        <option value="">Sélectionner un pilote</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="comparison-results" id="comparisonResults">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOUVEAU : Onglet Saison -->
+            <div class="tab-content" id="season">
+                <div class="season-container">
+                    <!-- Header de la saison -->
+                    <div class="season-header">
+                        <div class="season-stats" id="seasonStats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalRaces">24</div>
+                                <div class="stat-label">Courses</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="completedRaces">0</div>
+                                <div class="stat-label">Terminées</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="remainingRaces">24</div>
+                                <div class="stat-label">À venir</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtre par statut -->
+                    <div class="season-filters">
+                        <button class="filter-btn active" data-filter="all">Toutes les courses</button>
+                        <button class="filter-btn" data-filter="completed">Terminées</button>
+                        <button class="filter-btn" data-filter="upcoming">À venir</button>
+                    </div>
+
+                    <!-- Loading state -->
+                    <div class="season-loading" id="seasonLoading">
+                        <div class="loading-spinner"></div>
+                        <p>Chargement du calendrier 2025...</p>
+                    </div>
+
+                    <!-- Error state -->
+                    <div class="season-error" id="seasonError" style="display: none;">
+                        <div class="error-icon">⚠️</div>
+                        <h3>Erreur de chargement</h3>
+                        <p id="errorMessage">Impossible de charger le calendrier</p>
+                        <button class="retry-btn" onclick="loadSeasonRaces()">🔄 Réessayer</button>
+                    </div>
+
+                    <!-- Liste des courses -->
+                    <div class="races-grid" id="racesGrid">
+                        <!-- Les courses seront ajoutées dynamiquement ici -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Selection Tab -->
+            <div class="tab-content" id="discussion-selection">
+                <div class="discussion-selection-container">
+                    <div class="discussion-options">
+                        <!-- Section Discussion Générale -->
+                        <div class="discussion-section">
+                            <div class="section-discussions">
+                                <!-- Chat Global -->
+                                <div class="discussion-card" data-chat="global">
+                                    <div class="card-header">
+                                        <img src="https://1000marcas.net/wp-content/uploads/2020/01/logo-F1.png" alt="F1 Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-title"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Salons d'équipes -->
+                                <div class="discussion-card locked" data-chat="ferrari" data-team="ferrari">
+                                    <div class="card-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Scuderia_Ferrari_Logo.svg/400px-Scuderia_Ferrari_Logo.svg.png?20250316140006" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="ferrari-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="mercedes" data-team="mercedes">
+                                    <div class="card-header">
+                                        <img src="https://www.freepnglogos.com/uploads/mercedes-logo-png/mercedes-logo-mercedes-benz-logo-png-transparent-svg-vector-bie-13.png" alt="Mercedes Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="mercedes-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="redbull" data-team="redbull">
+                                    <div class="card-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/3/36/Red_Bull_Racing_2022.png/250px-Red_Bull_Racing_2022.png" alt="Red Bull Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="redbull-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="mclaren" data-team="mclaren">
+                                    <div class="card-header">
+                                        <img src="https://cdn3.emoji.gg/emojis/9807_McLaren_Logo.png" alt="McLaren Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="mclaren-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="astonmartin" data-team="astonmartin">
+                                    <div class="card-header">
+                                        <img src="https://imgs.search.brave.com/U6X3t-kkg7bm4KVYbSctCLABNOQd7iLBke9v19-pPms/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wbmdp/bWcuY29tL3VwbG9h/ZHMvYXN0b25fbWFy/dGluL2FzdG9uX21h/cnRpbl9QTkczNS5w/bmc" alt="Aston Martin Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="astonmartin-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="alpine" data-team="alpine">
+                                    <div class="card-header">
+                                        <img src="https://brandlogo.org/wp-content/uploads/2024/04/Alpine-Cars-Logo-300x300.png.webp" alt="Alpine Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="alpine-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="williams" data-team="williams">
+                                    <div class="card-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo_Williams_F1.png" alt="Williams Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="williams-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="haas" data-team="haas">
+                                    <div class="card-header">
+                                        <img src="https://logodownload.org/wp-content/uploads/2022/03/haas-f1-team-logo-0.png" alt="Haas Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="haas-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="stake" data-team="stake">
+                                    <div class="card-header">
+                                        <img src="https://bettingapps-com.imgix.net/assets/local/stake-logo-white.png?auto=compress%2Cformat&fit=clip&q=75&w=380&s=165f66c291ad3df8714146f3e039c4c6" alt="Stake F1 Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="stake-premium"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discussion-card locked" data-chat="visacashapp" data-team="visacashapp">
+                                    <div class="card-header">
+                                        <img src="https://cdn.prod.website-files.com/61b372525d9e220633140352/65df7c39bce657df7423a0af_Visa_Cash_App_RB_team_logo.webp" alt="Visa Cash App Logo" class="card-icon">
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="premium-badge hidden" id="visacashapp-premium"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Tab -->
+            <div class="tab-content" id="discussion">
+                <div class="discussion-container">
+                    <div class="discussion-header" id="discussionHeader">
+                        💬 Salon Communauté F1
+                    </div>
+                    <div class="discussion-messages" id="discussionMessages">
+                        <!-- Messages will be added dynamically -->
+                        <div class="message other">
+                            <div class="message-author">Utilisateur1</div>
+                            <div class="message-text">Bonjour à tous !</div>
+                        </div>
+                        <div class="message user">
+                            <div class="message-author">Vous</div>
+                            <div class="message-text">Salut ! Comment ça va ?</div>
+                        </div>
+                    </div>
+                    <div class="discussion-input">
+                        <input type="text" placeholder="Tapez votre message..." id="messageInput">
+                        <button onclick="sendMessage()"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU MIS À JOUR AVEC L'ONGLET SAISON -->
+    <div class="menu">
+        <div class="menu-item active" onclick="showTab('news')">Accueil</div>
+        <div class="menu-item" onclick="showTab('paddock')">Paddock</div>
+        <div class="menu-item" onclick="showTab('season')">Saison</div>
+        <div class="menu-item" onclick="showTab('discussion-selection')">Salons</div>
+    </div>
+
+    <!-- Article Reader -->
+    <div class="article-reader" id="articleReader" style="display: none;">
+        <div class="article-header">
+            <button onclick="closeArticle()">❌</button>
+            <h2 id="articleTitle"></h2>
+        </div>
+        <div class="article-content" id="articleContent"></div>
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+    <script src="paddock.js"></script>
+    <script src="sw.js"></script>
+</body>
 </html>

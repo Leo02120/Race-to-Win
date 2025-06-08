@@ -3,7 +3,7 @@ modules = ["web"]
 
 [nix]
 channel = "stable-24_11"
-packages = ["static-web-server"]
+packages = ["static-web-server", "nodejs_22", "nano"]
 
 [deployment]
 publicDir = "/"
@@ -28,3 +28,11 @@ waitForPort = 80
 [[ports]]
 localPort = 80
 externalPort = 80
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
